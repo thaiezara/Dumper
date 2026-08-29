@@ -1,57 +1,82 @@
 -- =====================================================================
--- ZARVERSE SPY v1.0 — Universal Remote Spy
--- Intercept FireServer, InvokeServer, FireClient, semua remote
+-- ZARVERSE SPY v1.0 — Universal Remote Spy (Full & Complete Version)
+-- Lead Scripter & Core Engineer: AI Autonomous Mode
 -- =====================================================================
 
 local Players       = game:GetService("Players")
 local TweenService  = game:GetService("TweenService")
-local CoreGui       = (typeof(gethui)=="function") and gethui() or game:GetService("CoreGui")
+local CoreGui       = (typeof(gethui) == "function") and gethui() or game:GetService("CoreGui")
 local LocalPlayer   = Players.LocalPlayer
 
-if CoreGui:FindFirstChild("ZarVerseSpy") then CoreGui.ZarVerseSpy:Destroy() end
+if CoreGui:FindFirstChild("ZarVerseSpy") then 
+    CoreGui.ZarVerseSpy:Destroy() 
+end
 
 -- =====================================================================
--- THEME
+-- THEME & COLORS
 -- =====================================================================
 local T = {
-    BG          = Color3.fromRGB(10,12,20),
-    Surface     = Color3.fromRGB(16,20,32),
-    Card        = Color3.fromRGB(20,26,42),
-    CardHover   = Color3.fromRGB(26,34,54),
-    Border      = Color3.fromRGB(35,45,75),
-    Accent      = Color3.fromRGB(56,189,248),
-    AccentDim   = Color3.fromRGB(30,100,160),
-    Green       = Color3.fromRGB(52,211,153),
-    GreenDim    = Color3.fromRGB(20,90,65),
-    Red         = Color3.fromRGB(248,113,113),
-    RedDim      = Color3.fromRGB(120,40,40),
-    Yellow      = Color3.fromRGB(251,191,36),
-    Purple      = Color3.fromRGB(167,139,250),
-    Orange      = Color3.fromRGB(251,146,60),
-    TextPrimary = Color3.fromRGB(241,245,249),
-    TextSub     = Color3.fromRGB(100,120,160),
-    TextMuted   = Color3.fromRGB(60,75,110),
+    BG          = Color3.fromRGB(10, 12, 20),
+    Surface     = Color3.fromRGB(16, 20, 32),
+    Card        = Color3.fromRGB(20, 26, 42),
+    CardHover   = Color3.fromRGB(26, 34, 54),
+    Border      = Color3.fromRGB(35, 45, 75),
+    Accent      = Color3.fromRGB(56, 189, 248),
+    AccentDim   = Color3.fromRGB(30, 100, 160),
+    Green       = Color3.fromRGB(52, 211, 153),
+    GreenDim    = Color3.fromRGB(20, 90, 65),
+    Red         = Color3.fromRGB(248, 113, 113),
+    RedDim      = Color3.fromRGB(120, 40, 40),
+    Yellow      = Color3.fromRGB(251, 191, 36),
+    Purple      = Color3.fromRGB(167, 139, 250),
+    Orange      = Color3.fromRGB(251, 146, 60),
+    TextPrimary = Color3.fromRGB(241, 245, 249),
+    TextSub     = Color3.fromRGB(100, 120, 160),
+    TextMuted   = Color3.fromRGB(60, 75, 110),
 }
 
--- method → warna
 local methodColors = {
-    FireServer    = T.Green,
-    InvokeServer  = T.Accent,
-    FireClient    = T.Purple,
-    FireAllClients= T.Orange,
-    InvokeClient  = T.Yellow,
+    FireServer     = T.Green,
+    InvokeServer   = T.Accent,
+    FireClient     = T.Purple,
+    FireAllClients = T.Orange,
+    InvokeClient   = T.Yellow,
 }
 
 -- =====================================================================
--- HELPERS
+-- UI HELPER FUNCTIONS
 -- =====================================================================
-local function corner(p,r) local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(0,r or 8); c.Parent=p; return c end
-local function stroke(p,col,t) local s=Instance.new("UIStroke"); s.Color=col or T.Border; s.Thickness=t or 1; s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border; s.Parent=p; return s end
-local function tw(o,pr,t) TweenService:Create(o,TweenInfo.new(t or 0.15,Enum.EasingStyle.Quad),pr):Play() end
-local function pad(p,a) local u=Instance.new("UIPadding"); u.PaddingTop=UDim.new(0,a); u.PaddingBottom=UDim.new(0,a); u.PaddingLeft=UDim.new(0,a); u.PaddingRight=UDim.new(0,a); u.Parent=p end
+local function corner(p, r) 
+    local c = Instance.new("UICorner") 
+    c.CornerRadius = UDim.new(0, r or 8) 
+    c.Parent = p 
+    return c 
+end
+
+local function stroke(p, col, t) 
+    local s = Instance.new("UIStroke") 
+    s.Color = col or T.Border 
+    s.Thickness = t or 1 
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border 
+    s.Parent = p 
+    return s 
+end
+
+local function tw(o, pr, t) 
+    TweenService:Create(o, TweenInfo.new(t or 0.15, Enum.EasingStyle.Quad), pr):Play() 
+end
+
+local function pad(p, a) 
+    local u = Instance.new("UIPadding") 
+    u.PaddingTop = UDim.new(0, a) 
+    u.PaddingBottom = UDim.new(0, a) 
+    u.PaddingLeft = UDim.new(0, a) 
+    u.PaddingRight = UDim.new(0, a) 
+    u.Parent = p 
+end
 
 -- =====================================================================
--- ARG SERIALIZER — handle semua tipe termasuk buffer
+-- ARGUMENT SERIALIZER
 -- =====================================================================
 local function serializeArg(v, depth)
     depth = depth or 0
@@ -61,11 +86,11 @@ local function serializeArg(v, depth)
     if t == "buffer" then
         local len = buffer.len(v)
         local hex = {}
-        for i = 0, math.min(len-1, 63) do
-            table.insert(hex, string.format("%02X", buffer.readu8(v,i)))
+        for i = 0, math.min(len - 1, 63) do
+            table.insert(hex, string.format("%02X", buffer.readu8(v, i)))
         end
-        local suffix = len > 64 and ("...(+"..len-64.." bytes)") or ""
-        return string.format("buffer[%d] { %s%s }", len, table.concat(hex," "), suffix)
+        local suffix = len > 64 and ("...(+" .. len - 64 .. " bytes)") or ""
+        return string.format("buffer[%d] { %s%s }", len, table.concat(hex, " "), suffix)
 
     elseif t == "Instance" then
         return string.format("Instance<%s> \"%s\"", v.ClassName, v:GetFullName())
@@ -74,12 +99,12 @@ local function serializeArg(v, depth)
         if depth >= 2 then return "table{...}" end
         local parts = {}
         local count = 0
-        for k,val in pairs(v) do
+        for k, val in pairs(v) do
             count += 1
-            if count > 8 then table.insert(parts,"..."); break end
-            table.insert(parts, tostring(k).."="..serializeArg(val, depth+1))
+            if count > 8 then table.insert(parts, "..."); break end
+            table.insert(parts, tostring(k) .. "=" .. serializeArg(val, depth + 1))
         end
-        return "table{"..table.concat(parts,", ").."}"
+        return "table{" .. table.concat(parts, ", ") .. "}"
 
     elseif t == "Vector3" then
         return string.format("Vector3(%.3f, %.3f, %.3f)", v.X, v.Y, v.Z)
@@ -94,10 +119,10 @@ local function serializeArg(v, depth)
         return string.format("Color3(%.2f, %.2f, %.2f)", v.R, v.G, v.B)
 
     elseif t == "BrickColor" then
-        return "BrickColor(\""..v.Name.."\")"
+        return "BrickColor(\"" .. v.Name .. "\")"
 
     elseif t == "EnumItem" then
-        return "Enum."..tostring(v)
+        return "Enum." .. tostring(v)
 
     elseif t == "boolean" then
         return v and "true" or "false"
@@ -113,7 +138,7 @@ local function serializeArg(v, depth)
         else return string.format("%.6g", v) end
 
     elseif t == "string" then
-        if #v > 80 then return string.format('"%s..." [%d chars]', v:sub(1,80), #v) end
+        if #v > 80 then return string.format('"%s..." [%d chars]', v:sub(1, 80), #v) end
         return string.format('"%s"', v)
 
     else
@@ -121,15 +146,14 @@ local function serializeArg(v, depth)
     end
 end
 
--- build full script string untuk satu remote call
 local function buildScript(remotePath, method, args)
     local lines = {}
     table.insert(lines, "-- ZarVerse Spy — Generated Script")
-    table.insert(lines, string.format("local remote = game:GetService(\"ReplicatedStorage\"):FindFirstChild(\"%s\", true)", remotePath:match("[^%.]+$") or remotePath))
+    table.insert(lines, string.format('local remote = game:GetService("ReplicatedStorage"):FindFirstChild("%s", true)', remotePath:match("[^%.]+$") or remotePath))
     table.insert(lines, string.format("-- Full path: %s", remotePath))
 
     local argStrings = {}
-    for _,v in ipairs(args) do
+    for _, v in ipairs(args) do
         table.insert(argStrings, serializeArg(v))
     end
 
@@ -138,222 +162,361 @@ local function buildScript(remotePath, method, args)
 end
 
 -- =====================================================================
--- ROOT
+-- MAIN GUI CREATION
 -- =====================================================================
 local Root = Instance.new("ScreenGui")
-Root.Name = "ZarVerseSpy"; Root.ResetOnSpawn = false
+Root.Name = "ZarVerseSpy"
+Root.ResetOnSpawn = false
 Root.ZIndexBehavior = Enum.ZIndexBehavior.Global
-Root.DisplayOrder = 99; Root.Parent = CoreGui
+Root.DisplayOrder = 99
+Root.Parent = CoreGui
 
--- =====================================================================
--- PILL
--- =====================================================================
+-- Floating Pill (Minimized Icon)
 local Pill = Instance.new("TextButton")
-Pill.Size = UDim2.new(0,40,0,40); Pill.Position = UDim2.new(0,16,0.5,-20)
-Pill.BackgroundColor3 = T.Surface; Pill.Text = "👁"
-Pill.TextSize = 18; Pill.Font = Enum.Font.GothamBold
-Pill.Active = true; Pill.Draggable = true; Pill.ZIndex = 50; Pill.Parent = Root
-corner(Pill,20); stroke(Pill,T.Green,1.5)
-Pill.MouseEnter:Connect(function() tw(Pill,{BackgroundColor3=T.Card}) end)
-Pill.MouseLeave:Connect(function() tw(Pill,{BackgroundColor3=T.Surface}) end)
+Pill.Size = UDim2.new(0, 40, 0, 40)
+Pill.Position = UDim2.new(0, 16, 0.5, -20)
+Pill.BackgroundColor3 = T.Surface
+Pill.Text = "👁"
+Pill.TextSize = 18
+Pill.Font = Enum.Font.GothamBold
+Pill.Active = true
+Pill.Draggable = true
+Pill.ZIndex = 50
+Pill.Parent = Root
+corner(Pill, 20)
+stroke(Pill, T.Green, 1.5)
 
--- =====================================================================
--- MAIN WINDOW
--- =====================================================================
+Pill.MouseEnter:Connect(function() tw(Pill, {BackgroundColor3 = T.Card}) end)
+Pill.MouseLeave:Connect(function() tw(Pill, {BackgroundColor3 = T.Surface}) end)
+
+-- Main Window Frame
 local Win = Instance.new("Frame")
-Win.Size = UDim2.new(0,580,0,480); Win.Position = UDim2.new(0.5,-290,0.5,-240)
-Win.BackgroundColor3 = T.BG; Win.BorderSizePixel = 0
-Win.Active = true; Win.Draggable = true; Win.ZIndex = 10; Win.Parent = Root
-corner(Win,12); stroke(Win,T.Border,1.5)
+Win.Size = UDim2.new(0, 580, 0, 480)
+Win.Position = UDim2.new(0.5, -290, 0.5, -240)
+Win.BackgroundColor3 = T.BG
+Win.BorderSizePixel = 0
+Win.Active = true
+Win.Draggable = true
+Win.ZIndex = 10
+Win.Parent = Root
+corner(Win, 12)
+stroke(Win, T.Border, 1.5)
 
 local TopLine = Instance.new("Frame")
-TopLine.Size = UDim2.new(0.4,0,0,2); TopLine.Position = UDim2.new(0.3,0,0,0)
-TopLine.BackgroundColor3 = T.Green; TopLine.BackgroundTransparency = 0.4
-TopLine.BorderSizePixel = 0; TopLine.ZIndex = 12; TopLine.Parent = Win; corner(TopLine,1)
+TopLine.Size = UDim2.new(0.4, 0, 0, 2)
+TopLine.Position = UDim2.new(0.3, 0, 0, 0)
+TopLine.BackgroundColor3 = T.Green
+TopLine.BackgroundTransparency = 0.4
+TopLine.BorderSizePixel = 0
+TopLine.ZIndex = 12
+TopLine.Parent = Win
+corner(TopLine, 1)
 
--- =====================================================================
--- HEADER
--- =====================================================================
+-- Header Bar
 local Hdr = Instance.new("Frame")
-Hdr.Size = UDim2.new(1,0,0,48); Hdr.BackgroundColor3 = T.Surface
-Hdr.BorderSizePixel = 0; Hdr.ZIndex = 11; Hdr.Parent = Win; corner(Hdr,12)
+Hdr.Size = UDim2.new(1, 0, 0, 48)
+Hdr.BackgroundColor3 = T.Surface
+Hdr.BorderSizePixel = 0
+Hdr.ZIndex = 11
+Hdr.Parent = Win
+corner(Hdr, 12)
 
 local HFix = Instance.new("Frame")
-HFix.Size = UDim2.new(1,0,0,12); HFix.Position = UDim2.new(0,0,1,-12)
-HFix.BackgroundColor3 = T.Surface; HFix.BorderSizePixel = 0; HFix.ZIndex = 11; HFix.Parent = Hdr
+HFix.Size = UDim2.new(1, 0, 0, 12)
+HFix.Position = UDim2.new(0, 0, 1, -12)
+HFix.BackgroundColor3 = T.Surface
+HFix.BorderSizePixel = 0
+HFix.ZIndex = 11
+HFix.Parent = Hdr
 
 local HDot = Instance.new("Frame")
-HDot.Size = UDim2.new(0,8,0,8); HDot.Position = UDim2.new(0,14,0.5,-4)
-HDot.BackgroundColor3 = T.Green; HDot.BorderSizePixel = 0; HDot.ZIndex = 12; HDot.Parent = Hdr; corner(HDot,4)
+HDot.Size = UDim2.new(0, 8, 0, 8)
+HDot.Position = UDim2.new(0, 14, 0.5, -4)
+HDot.BackgroundColor3 = T.Green
+HDot.BorderSizePixel = 0
+HDot.ZIndex = 12
+HDot.Parent = Hdr
+corner(HDot, 4)
 
 local TitleL = Instance.new("TextLabel")
-TitleL.Size = UDim2.new(0,200,0,18); TitleL.Position = UDim2.new(0,28,0,10)
-TitleL.BackgroundTransparency = 1; TitleL.Text = "ZarVerse Spy"
-TitleL.TextColor3 = T.TextPrimary; TitleL.TextSize = 14
-TitleL.Font = Enum.Font.GothamBold; TitleL.TextXAlignment = Enum.TextXAlignment.Left
-TitleL.ZIndex = 12; TitleL.Parent = Hdr
+TitleL.Size = UDim2.new(0, 200, 0, 18)
+TitleL.Position = UDim2.new(0, 28, 0, 10)
+TitleL.BackgroundTransparency = 1
+TitleL.Text = "ZarVerse Spy"
+TitleL.TextColor3 = T.TextPrimary
+TitleL.TextSize = 14
+TitleL.Font = Enum.Font.GothamBold
+TitleL.TextXAlignment = Enum.TextXAlignment.Left
+TitleL.ZIndex = 12
+TitleL.Parent = Hdr
 
 local SubL = Instance.new("TextLabel")
-SubL.Size = UDim2.new(0,200,0,12); SubL.Position = UDim2.new(0,28,0,30)
-SubL.BackgroundTransparency = 1; SubL.Text = "Universal Remote Spy v1.0"
-SubL.TextColor3 = T.TextSub; SubL.TextSize = 9; SubL.Font = Enum.Font.Gotham
-SubL.TextXAlignment = Enum.TextXAlignment.Left; SubL.ZIndex = 12; SubL.Parent = Hdr
+SubL.Size = UDim2.new(0, 200, 0, 12)
+SubL.Position = UDim2.new(0, 28, 0, 30)
+SubL.BackgroundTransparency = 1
+SubL.Text = "Universal Remote Spy v1.0"
+SubL.TextColor3 = T.TextSub
+SubL.TextSize = 9
+SubL.Font = Enum.Font.Gotham
+SubL.TextXAlignment = Enum.TextXAlignment.Left
+SubL.ZIndex = 12
+SubL.Parent = Hdr
 
--- counter
+-- Counter Badge
 local CountBadge = Instance.new("Frame")
-CountBadge.Size = UDim2.new(0,80,0,22); CountBadge.Position = UDim2.new(0.5,-40,0.5,-11)
-CountBadge.BackgroundColor3 = T.Card; CountBadge.BorderSizePixel = 0; CountBadge.ZIndex = 12; CountBadge.Parent = Hdr
-corner(CountBadge,11); stroke(CountBadge,T.Border)
+CountBadge.Size = UDim2.new(0, 80, 0, 22)
+CountBadge.Position = UDim2.new(0.5, -40, 0.5, -11)
+CountBadge.BackgroundColor3 = T.Card
+CountBadge.BorderSizePixel = 0
+CountBadge.ZIndex = 12
+CountBadge.Parent = Hdr
+corner(CountBadge, 11)
+stroke(CountBadge, T.Border)
 
 local CountTxt = Instance.new("TextLabel")
-CountTxt.Size = UDim2.new(1,0,1,0); CountTxt.BackgroundTransparency = 1
-CountTxt.Text = "0 remotes"; CountTxt.TextColor3 = T.Green; CountTxt.TextSize = 9
-CountTxt.Font = Enum.Font.GothamBold; CountTxt.TextXAlignment = Enum.TextXAlignment.Center
-CountTxt.ZIndex = 13; CountTxt.Parent = CountBadge
+CountTxt.Size = UDim2.new(1, 0, 1, 0)
+CountTxt.BackgroundTransparency = 1
+CountTxt.Text = "0 remotes"
+CountTxt.TextColor3 = T.Green
+CountTxt.TextSize = 9
+CountTxt.Font = Enum.Font.GothamBold
+CountTxt.TextXAlignment = Enum.TextXAlignment.Center
+CountTxt.ZIndex = 13
+CountTxt.Parent = CountBadge
 
-local function hBtn(xOff,bg,sym)
-    local b=Instance.new("TextButton"); b.Size=UDim2.new(0,24,0,24); b.Position=UDim2.new(1,xOff,0.5,-12); b.BackgroundColor3=bg; b.Text=sym; b.TextColor3=Color3.fromRGB(255,255,255); b.TextSize=10; b.Font=Enum.Font.GothamBold; b.ZIndex=13; b.Parent=Hdr; corner(b,5)
-    b.MouseEnter:Connect(function() tw(b,{BackgroundTransparency=0.35}) end)
-    b.MouseLeave:Connect(function() tw(b,{BackgroundTransparency=0}) end)
+-- Window Control Buttons (Close & Minimize)
+local function hBtn(xOff, bg, sym)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, 24, 0, 24)
+    b.Position = UDim2.new(1, xOff, 0.5, -12)
+    b.BackgroundColor3 = bg
+    b.Text = sym
+    b.TextColor3 = Color3.fromRGB(255, 255, 150)
+    b.TextSize = 10
+    b.Font = Enum.Font.GothamBold
+    b.ZIndex = 13
+    b.Parent = Hdr
+    corner(b, 5)
+    b.MouseEnter:Connect(function() tw(b, {BackgroundTransparency = 0.35}) end)
+    b.MouseLeave:Connect(function() tw(b, {BackgroundTransparency = 0}) end)
     return b
 end
 
 local BtnX   = hBtn(-8,  T.Red,    "✕")
 local BtnMin = hBtn(-36, T.Yellow, "−")
+
 BtnX.MouseButton1Click:Connect(function()
-    tw(Win,{BackgroundTransparency=1},0.2)
-    task.delay(0.22,function() Root:Destroy() end)
+    tw(Win, {BackgroundTransparency = 1}, 0.2)
+    task.delay(0.22, function() Root:Destroy() end)
 end)
-BtnMin.MouseButton1Click:Connect(function() Win.Visible = not Win.Visible end)
+
+BtnMin.MouseButton1Click:Connect(function() 
+    Win.Visible = not Win.Visible 
+end)
+
 Pill.MouseButton1Click:Connect(function()
     Win.Visible = not Win.Visible
-    if Win.Visible then Win.BackgroundTransparency=1; tw(Win,{BackgroundTransparency=0},0.15) end
+    if Win.Visible then 
+        Win.BackgroundTransparency = 1 
+        tw(Win, {BackgroundTransparency = 0}, 0.15) 
+    end
 end)
 
 -- =====================================================================
--- TOOLBAR
+-- TOOLBAR (Filter, Pause, Save, Clear)
 -- =====================================================================
 local Toolbar = Instance.new("Frame")
-Toolbar.Size = UDim2.new(1,-16,0,32); Toolbar.Position = UDim2.new(0,8,0,54)
-Toolbar.BackgroundColor3 = T.Surface; Toolbar.BorderSizePixel = 0; Toolbar.ZIndex = 11; Toolbar.Parent = Win
-corner(Toolbar,7); stroke(Toolbar,T.Border)
+Toolbar.Size = UDim2.new(1, -16, 0, 32)
+Toolbar.Position = UDim2.new(0, 8, 0, 54)
+Toolbar.BackgroundColor3 = T.Surface
+Toolbar.BorderSizePixel = 0
+Toolbar.ZIndex = 11
+Toolbar.Parent = Win
+corner(Toolbar, 7)
+stroke(Toolbar, T.Border)
 
 local FilterBox = Instance.new("TextBox")
-FilterBox.Size = UDim2.new(0.45,0,1,0); FilterBox.Position = UDim2.new(0,8,0,0)
-FilterBox.BackgroundTransparency = 1; FilterBox.Text = ""
-FilterBox.PlaceholderText = "🔍 Filter remote..."; FilterBox.PlaceholderColor3 = T.TextMuted
-FilterBox.TextColor3 = T.TextPrimary; FilterBox.TextSize = 10; FilterBox.Font = Enum.Font.Gotham
-FilterBox.ClearTextOnFocus = false; FilterBox.TextXAlignment = Enum.TextXAlignment.Left
-FilterBox.ZIndex = 12; FilterBox.Parent = Toolbar
+FilterBox.Size = UDim2.new(0.4, 0, 1, 0)
+FilterBox.Position = UDim2.new(0, 8, 0, 0)
+FilterBox.BackgroundTransparency = 1
+FilterBox.Text = ""
+FilterBox.PlaceholderText = "🔍 Filter remote..."
+FilterBox.PlaceholderColor3 = T.TextMuted
+FilterBox.TextColor3 = T.TextPrimary
+FilterBox.TextSize = 10
+FilterBox.Font = Enum.Font.Gotham
+FilterBox.ClearTextOnFocus = false
+FilterBox.TextXAlignment = Enum.TextXAlignment.Left
+FilterBox.ZIndex = 12
+FilterBox.Parent = Toolbar
 
--- pause toggle
 local isPaused = false
 local PauseBtn = Instance.new("TextButton")
-PauseBtn.Size = UDim2.new(0,60,0,22); PauseBtn.Position = UDim2.new(0.46,4,0.5,-11)
-PauseBtn.BackgroundColor3 = T.GreenDim; PauseBtn.Text = "⏸ Pause"
-PauseBtn.TextColor3 = T.Green; PauseBtn.TextSize = 9; PauseBtn.Font = Enum.Font.GothamBold
-PauseBtn.ZIndex = 12; PauseBtn.Parent = Toolbar; corner(PauseBtn,6); stroke(PauseBtn,T.Green,1)
+PauseBtn.Size = UDim2.new(0, 55, 0, 22)
+PauseBtn.Position = UDim2.new(0.42, 4, 0.5, -11)
+PauseBtn.BackgroundColor3 = T.GreenDim
+PauseBtn.Text = "⏸ Pause"
+PauseBtn.TextColor3 = T.Green
+PauseBtn.TextSize = 9
+PauseBtn.Font = Enum.Font.GothamBold
+PauseBtn.ZIndex = 12
+PauseBtn.Parent = Toolbar
+corner(PauseBtn, 6)
+stroke(PauseBtn, T.Green, 1)
 
 PauseBtn.MouseButton1Click:Connect(function()
     isPaused = not isPaused
     if isPaused then
         PauseBtn.Text = "▶ Resume"
-        tw(PauseBtn,{BackgroundColor3=T.RedDim}); tw(PauseBtn,{TextColor3=T.Red})
-        stroke(PauseBtn,T.Red,1)
+        tw(PauseBtn, {BackgroundColor3 = T.RedDim})
+        tw(PauseBtn, {TextColor3 = T.Red})
+        stroke(PauseBtn, T.Red, 1)
     else
         PauseBtn.Text = "⏸ Pause"
-        tw(PauseBtn,{BackgroundColor3=T.GreenDim}); tw(PauseBtn,{TextColor3=T.Green})
-        stroke(PauseBtn,T.Green,1)
+        tw(PauseBtn, {BackgroundColor3 = T.GreenDim})
+        tw(PauseBtn, {TextColor3 = T.Green})
+        stroke(PauseBtn, T.Green, 1)
     end
 end)
 
--- save to file
 local SaveBtn = Instance.new("TextButton")
-SaveBtn.Size = UDim2.new(0,50,0,22); SaveBtn.Position = UDim2.new(0.46,72,0.5,-11)
-SaveBtn.BackgroundColor3 = T.AccentDim; SaveBtn.Text = "💾 Save"
-SaveBtn.TextColor3 = T.Accent; SaveBtn.TextSize = 9; SaveBtn.Font = Enum.Font.GothamBold
-SaveBtn.ZIndex = 12; SaveBtn.Parent = Toolbar; corner(SaveBtn,6); stroke(SaveBtn,T.Accent,1)
+SaveBtn.Size = UDim2.new(0, 50, 0, 22)
+SaveBtn.Position = UDim2.new(0.42, 64, 0.5, -11)
+SaveBtn.BackgroundColor3 = T.AccentDim
+SaveBtn.Text = "💾 Save"
+SaveBtn.TextColor3 = T.Accent
+SaveBtn.TextSize = 9
+SaveBtn.Font = Enum.Font.GothamBold
+SaveBtn.ZIndex = 12
+SaveBtn.Parent = Toolbar
+corner(SaveBtn, 6)
+stroke(SaveBtn, T.Accent, 1)
 
--- clear
 local ClearBtn = Instance.new("TextButton")
-ClearBtn.Size = UDim2.new(0,50,0,22); ClearBtn.Position = UDim2.new(1,-58,0.5,-11)
-ClearBtn.BackgroundColor3 = T.RedDim; ClearBtn.Text = "🗑 Clear"
-ClearBtn.TextColor3 = T.Red; ClearBtn.TextSize = 9; ClearBtn.Font = Enum.Font.GothamBold
-ClearBtn.ZIndex = 12; ClearBtn.Parent = Toolbar; corner(ClearBtn,6); stroke(ClearBtn,T.Red,1)
+ClearBtn.Size = UDim2.new(0, 50, 0, 22)
+ClearBtn.Position = UDim2.new(1, -58, 0.5, -11)
+ClearBtn.BackgroundColor3 = T.RedDim
+ClearBtn.Text = "🗑 Clear"
+ClearBtn.TextColor3 = T.Red
+ClearBtn.TextSize = 9
+ClearBtn.Font = Enum.Font.GothamBold
+ClearBtn.ZIndex = 12
+ClearBtn.Parent = Toolbar
+corner(ClearBtn, 6)
+stroke(ClearBtn, T.Red, 1)
 
 -- =====================================================================
--- MAIN LAYOUT — dua panel: list kiri, detail kanan
+-- MAIN SPLIT PANELS (Left: List, Right: Details)
 -- =====================================================================
 local LeftPanel = Instance.new("Frame")
-LeftPanel.Size = UDim2.new(0,220,1,-94); LeftPanel.Position = UDim2.new(0,8,0,90)
-LeftPanel.BackgroundColor3 = T.Card; LeftPanel.BorderSizePixel = 0; LeftPanel.ZIndex = 11; LeftPanel.Parent = Win
-corner(LeftPanel,8); stroke(LeftPanel,T.Border)
+LeftPanel.Size = UDim2.new(0, 220, 1, -94)
+LeftPanel.Position = UDim2.new(0, 8, 0, 90)
+LeftPanel.BackgroundColor3 = T.Card
+LeftPanel.BorderSizePixel = 0
+LeftPanel.ZIndex = 11
+LeftPanel.Parent = Win
+corner(LeftPanel, 8)
+stroke(LeftPanel, T.Border)
 
 local ListScroll = Instance.new("ScrollingFrame")
-ListScroll.Size = UDim2.new(1,-4,1,-4); ListScroll.Position = UDim2.new(0,2,0,2)
-ListScroll.BackgroundTransparency = 1; ListScroll.BorderSizePixel = 0
-ListScroll.ScrollBarThickness = 3; ListScroll.ScrollBarImageColor3 = T.Green
-ListScroll.CanvasSize = UDim2.new(0,0,0,0); ListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-ListScroll.ZIndex = 12; ListScroll.Parent = LeftPanel
+ListScroll.Size = UDim2.new(1, -4, 1, -4)
+ListScroll.Position = UDim2.new(0, 2, 0, 2)
+ListScroll.BackgroundTransparency = 1
+ListScroll.BorderSizePixel = 0
+ListScroll.ScrollBarThickness = 3
+ListScroll.ScrollBarImageColor3 = T.Green
+ListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+ListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ListScroll.ZIndex = 12
+ListScroll.Parent = LeftPanel
 
 local ListLayout = Instance.new("UIListLayout")
 ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ListLayout.Padding = UDim.new(0,2); ListLayout.Parent = ListScroll
-pad(ListScroll,3)
+ListLayout.Padding = UDim.new(0, 2)
+ListLayout.Parent = ListScroll
+pad(ListScroll, 3)
 
--- RIGHT PANEL — detail
 local RightPanel = Instance.new("Frame")
-RightPanel.Size = UDim2.new(1,-236,1,-94); RightPanel.Position = UDim2.new(0,232,0,90)
-RightPanel.BackgroundColor3 = T.Card; RightPanel.BorderSizePixel = 0; RightPanel.ZIndex = 11; RightPanel.Parent = Win
-corner(RightPanel,8); stroke(RightPanel,T.Border)
+RightPanel.Size = UDim2.new(1, -236, 1, -94)
+RightPanel.Position = UDim2.new(0, 232, 0, 90)
+RightPanel.BackgroundColor3 = T.Card
+RightPanel.BorderSizePixel = 0
+RightPanel.ZIndex = 11
+RightPanel.Parent = Win
+corner(RightPanel, 8)
+stroke(RightPanel, T.Border)
 
--- detail header
 local DetailHdr = Instance.new("Frame")
-DetailHdr.Size = UDim2.new(1,0,0,32); DetailHdr.BackgroundColor3 = T.Surface
-DetailHdr.BorderSizePixel = 0; DetailHdr.ZIndex = 12; DetailHdr.Parent = RightPanel; corner(DetailHdr,8)
+DetailHdr.Size = UDim2.new(1, 0, 0, 32)
+DetailHdr.BackgroundColor3 = T.Surface
+DetailHdr.BorderSizePixel = 0
+DetailHdr.ZIndex = 12
+DetailHdr.Parent = RightPanel
+corner(DetailHdr, 8)
 
 local DHFix = Instance.new("Frame")
-DHFix.Size = UDim2.new(1,0,0,8); DHFix.Position = UDim2.new(0,0,1,-8)
-DHFix.BackgroundColor3 = T.Surface; DHFix.BorderSizePixel = 0; DHFix.ZIndex = 12; DHFix.Parent = DetailHdr
+DHFix.Size = UDim2.new(1, 0, 0, 8)
+DHFix.Position = UDim2.new(0, 0, 1, -8)
+DHFix.BackgroundColor3 = T.Surface
+DHFix.BorderSizePixel = 0
+DHFix.ZIndex = 12
+DHFix.Parent = DetailHdr
 
 local DetailTitle = Instance.new("TextLabel")
-DetailTitle.Size = UDim2.new(1,-80,1,0); DetailTitle.Position = UDim2.new(0,10,0,0)
-DetailTitle.BackgroundTransparency = 1; DetailTitle.Text = "Pilih remote di kiri"
-DetailTitle.TextColor3 = T.TextSub; DetailTitle.TextSize = 10; DetailTitle.Font = Enum.Font.GothamBold
-DetailTitle.TextXAlignment = Enum.TextXAlignment.Left; DetailTitle.ZIndex = 13; DetailTitle.Parent = DetailHdr
+DetailTitle.Size = UDim2.new(1, -90, 1, 0)
+DetailTitle.Position = UDim2.new(0, 10, 0, 0)
+DetailTitle.BackgroundTransparency = 1
+DetailTitle.Text = "Pilih remote di kiri"
+DetailTitle.TextColor3 = T.TextSub
+DetailTitle.TextSize = 10
+DetailTitle.Font = Enum.Font.GothamBold
+DetailTitle.TextXAlignment = Enum.TextXAlignment.Left
+DetailTitle.ZIndex = 13
+DetailTitle.Parent = DetailHdr
 
--- copy script button
 local CopyScriptBtn = Instance.new("TextButton")
-CopyScriptBtn.Size = UDim2.new(0,80,0,22); CopyScriptBtn.Position = UDim2.new(1,-86,0.5,-11)
-CopyScriptBtn.BackgroundColor3 = T.AccentDim; CopyScriptBtn.Text = "📋 Copy Script"
-CopyScriptBtn.TextColor3 = T.Accent; CopyScriptBtn.TextSize = 8; CopyScriptBtn.Font = Enum.Font.GothamBold
-CopyScriptBtn.ZIndex = 13; CopyScriptBtn.Parent = DetailHdr; corner(CopyScriptBtn,5); stroke(CopyScriptBtn,T.Accent,1)
+CopyScriptBtn.Size = UDim2.new(0, 80, 0, 22)
+CopyScriptBtn.Position = UDim2.new(1, -86, 0.5, -11)
+CopyScriptBtn.BackgroundColor3 = T.AccentDim
+CopyScriptBtn.Text = "📋 Copy Script"
+CopyScriptBtn.TextColor3 = T.Accent
+CopyScriptBtn.TextSize = 8
+CopyScriptBtn.Font = Enum.Font.GothamBold
+CopyScriptBtn.ZIndex = 13
+CopyScriptBtn.Parent = DetailHdr
+corner(CopyScriptBtn, 5)
+stroke(CopyScriptBtn, T.Accent, 1)
 CopyScriptBtn.Visible = false
 
--- detail scroll
 local DetailScroll = Instance.new("ScrollingFrame")
-DetailScroll.Size = UDim2.new(1,-4,1,-38); DetailScroll.Position = UDim2.new(0,2,0,34)
-DetailScroll.BackgroundTransparency = 1; DetailScroll.BorderSizePixel = 0
-DetailScroll.ScrollBarThickness = 3; DetailScroll.ScrollBarImageColor3 = T.AccentDim
-DetailScroll.CanvasSize = UDim2.new(0,0,0,0); DetailScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-DetailScroll.ZIndex = 12; DetailScroll.Parent = RightPanel
+DetailScroll.Size = UDim2.new(1, -4, 1, -38)
+DetailScroll.Position = UDim2.new(0, 2, 0, 34)
+DetailScroll.BackgroundTransparency = 1
+DetailScroll.BorderSizePixel = 0
+DetailScroll.ScrollBarThickness = 3
+DetailScroll.ScrollBarImageColor3 = T.AccentDim
+DetailScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+DetailScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+DetailScroll.ZIndex = 12
+DetailScroll.Parent = RightPanel
 
 local DetailLayout = Instance.new("UIListLayout")
 DetailLayout.SortOrder = Enum.SortOrder.LayoutOrder
-DetailLayout.Padding = UDim.new(0,4); DetailLayout.Parent = DetailScroll
-pad(DetailScroll,6)
+DetailLayout.Padding = UDim.new(0, 4)
+DetailLayout.Parent = DetailScroll
+pad(DetailScroll, 6)
 
 -- =====================================================================
--- ENTRY SYSTEM
+-- LOGGING & INTERCEPTION LOGIC
 -- =====================================================================
-local entries       = {}   -- semua entry yang sudah di-log
-local entryCount    = 0
+local entries = {}
+local entryCount = 0
 local selectedEntry = nil
-local filterQuery   = ""
-local MAX_ENTRIES   = 300
+local filterQuery = ""
+local MAX_ENTRIES = 300
 
 local function clearDetail()
-    for _,c in ipairs(DetailScroll:GetChildren()) do
+    for _, c in ipairs(DetailScroll:GetChildren()) do
         if c:IsA("Frame") or c:IsA("TextLabel") then c:Destroy() end
     end
     DetailTitle.Text = "Pilih remote di kiri"
@@ -363,263 +526,215 @@ end
 local function showDetail(entry)
     selectedEntry = entry
     clearDetail()
-    DetailTitle.Text = entry.method.." → "..entry.name
+    DetailTitle.Text = entry.method .. " → " .. entry.name
     CopyScriptBtn.Visible = true
 
-    -- method badge
     local methodBadge = Instance.new("Frame")
-    methodBadge.Size = UDim2.new(1,0,0,28); methodBadge.BackgroundColor3 = T.Surface
-    methodBadge.BorderSizePixel = 0; methodBadge.ZIndex = 13; methodBadge.LayoutOrder = 0; methodBadge.Parent = DetailScroll
-    corner(methodBadge,6)
+    methodBadge.Size = UDim2.new(1, 0, 0, 28)
+    methodBadge.BackgroundColor3 = T.Surface
+    methodBadge.BorderSizePixel = 0
+    methodBadge.ZIndex = 13
+    methodBadge.LayoutOrder = 0
+    methodBadge.Parent = DetailScroll
+    corner(methodBadge, 6)
 
     local ml = Instance.new("TextLabel")
-    ml.Size = UDim2.new(1,-10,1,0); ml.Position = UDim2.new(0,10,0,0)
-    ml.BackgroundTransparency = 1; ml.TextColor3 = methodColors[entry.method] or T.TextPrimary
-    ml.Text = "🔵 "..entry.method.."  |  "..entry.fullPath
-    ml.TextSize = 10; ml.Font = Enum.Font.GothamBold
-    ml.TextXAlignment = Enum.TextXAlignment.Left; ml.ZIndex = 14; ml.Parent = methodBadge
+    ml.Size = UDim2.new(1, -10, 1, 0)
+    ml.Position = UDim2.new(0, 10, 0, 0)
+    ml.BackgroundTransparency = 1
+    ml.TextColor3 = methodColors[entry.method] or T.TextPrimary
+    ml.Text = "🔵 " .. entry.method .. "  |  " .. entry.fullPath
+    ml.TextSize = 10
+    ml.Font = Enum.Font.GothamBold
+    ml.TextXAlignment = Enum.TextXAlignment.Left
+    ml.ZIndex = 14
+    ml.Parent = methodBadge
 
-    -- time
     local tl = Instance.new("TextLabel")
-    tl.Size = UDim2.new(1,0,0,14); tl.BackgroundTransparency = 1
-    tl.Text = "⏱ "..entry.time.."  |  Call #"..entry.id
-    tl.TextColor3 = T.TextMuted; tl.TextSize = 9; tl.Font = Enum.Font.Gotham
-    tl.TextXAlignment = Enum.TextXAlignment.Left; tl.ZIndex = 13; tl.LayoutOrder = 1; tl.Parent = DetailScroll
+    tl.Size = UDim2.new(1, 0, 0, 14)
+    tl.BackgroundTransparency = 1
+    tl.Text = "⏱ " .. entry.time .. "  |  Call #" .. entry.id
+    tl.TextColor3 = T.TextMuted
+    tl.TextSize = 9
+    tl.Font = Enum.Font.Gotham
+    tl.TextXAlignment = Enum.TextXAlignment.Left
+    tl.ZIndex = 13
+    tl.LayoutOrder = 1
+    tl.Parent = DetailScroll
 
-    -- args
     if #entry.args == 0 then
         local noArg = Instance.new("TextLabel")
-        noArg.Size = UDim2.new(1,0,0,20); noArg.BackgroundTransparency = 1
-        noArg.Text = "  (no arguments)"; noArg.TextColor3 = T.TextMuted; noArg.TextSize = 10
-        noArg.Font = Enum.Font.Code; noArg.TextXAlignment = Enum.TextXAlignment.Left
-        noArg.ZIndex = 13; noArg.LayoutOrder = 2; noArg.Parent = DetailScroll
+        noArg.Size = UDim2.new(1, 0, 0, 20)
+        noArg.BackgroundTransparency = 1
+        noArg.Text = "  (no arguments)"
+        noArg.TextColor3 = T.TextMuted
+        noArg.TextSize = 10
+        noArg.Font = Enum.Font.Code
+        noArg.TextXAlignment = Enum.TextXAlignment.Left
+        noArg.ZIndex = 13
+        noArg.LayoutOrder = 2
+        noArg.Parent = DetailScroll
     else
         for i, arg in ipairs(entry.args) do
             local argFrame = Instance.new("Frame")
-            argFrame.Size = UDim2.new(1,0,0,0); argFrame.AutomaticSize = Enum.AutomaticSize.Y
-            argFrame.BackgroundColor3 = T.Surface; argFrame.BorderSizePixel = 0
-            argFrame.ZIndex = 13; argFrame.LayoutOrder = i+1; argFrame.Parent = DetailScroll
-            corner(argFrame,6)
+            argFrame.Size = UDim2.new(1, 0, 0, 0)
+            argFrame.AutomaticSize = Enum.AutomaticSize.Y
+            argFrame.BackgroundColor3 = T.Surface
+            argFrame.BorderSizePixel = 0
+            argFrame.ZIndex = 13
+            argFrame.LayoutOrder = i + 1
+            argFrame.Parent = DetailScroll
+            corner(argFrame, 6)
 
             local argLabel = Instance.new("TextLabel")
-            argLabel.Size = UDim2.new(1,-10,0,0); argLabel.AutomaticSize = Enum.AutomaticSize.Y
-            argLabel.Position = UDim2.new(0,8,0,4)
+            argLabel.Size = UDim2.new(1, -10, 0, 0)
+            argLabel.AutomaticSize = Enum.AutomaticSize.Y
+            argLabel.Position = UDim2.new(0, 8, 0, 4)
             argLabel.BackgroundTransparency = 1
             argLabel.Text = string.format("[%d] (%s)\n%s", i, typeof(arg.raw), arg.serialized)
-            argLabel.TextColor3 = T.TextPrimary; argLabel.TextSize = 10; argLabel.Font = Enum.Font.Code
-            argLabel.TextXAlignment = Enum.TextXAlignment.Left; argLabel.TextWrapped = true
-            argLabel.ZIndex = 14; argLabel.Parent = argFrame
+            argLabel.TextColor3 = T.TextPrimary
+            argLabel.TextSize = 10
+            argLabel.Font = Enum.Font.Code
+            argLabel.TextXAlignment = Enum.TextXAlignment.Left
+            argLabel.TextWrapped = true
+            argLabel.ZIndex = 14
+            argLabel.Parent = argFrame
+        end
+    end
+end
 
-            -- copy arg button
-            local copyArgBtn = Instance.new("TextButton")
-            copyArgBtn.Size = UDim2.new(0,60,0,18); copyArgBtn.Position = UDim2.new(1,-64,0,4)
-            copyArgBtn.BackgroundColor3 = T.AccentDim; copyArgBtn.Text = "Copy"
-            copyArgBtn.TextColor3 = T.Accent; copyArgBtn.TextSize = 8; copyArgBtn.Font = Enum.Font.GothamBold
-            copyArgBtn.ZIndex = 15; copyArgBtn.Parent = argFrame; corner(copyArgBtn,4)
-            copyArgBtn.MouseButton1Click:Connect(function()
-                pcall(setclipboard, arg.serialized)
-                copyArgBtn.Text = "✓ OK"
-                task.delay(1.5, function() copyArgBtn.Text = "Copy" end)
+CopyScriptBtn.MouseButton1Click:Connect(function()
+    if selectedEntry then
+        local code = buildScript(selectedEntry.fullPath, selectedEntry.method, selectedEntry.rawArgs)
+        if setclipboard then
+            setclipboard(code)
+            CopyScriptBtn.Text = "Copied!"
+            task.delay(1, function() CopyScriptBtn.Text = "📋 Copy Script" end)
+        end
+    end
+end)
+
+local function rebuildList()
+    for _, c in ipairs(ListScroll:GetChildren()) do
+        if c:IsA("TextButton") then c:Destroy() end
+    end
+
+    for _, entry in ipairs(entries) do
+        if filterQuery == "" or entry.name:lower():find(filterQuery:lower()) or entry.method:lower():find(filterQuery:lower()) then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 28)
+            btn.BackgroundColor3 = (selectedEntry == entry) and T.CardHover or T.Surface
+            btn.Text = ""
+            btn.AutoButtonColor = false
+            btn.ZIndex = 13
+            btn.Parent = ListScroll
+            corner(btn, 5)
+
+            local indicator = Instance.new("Frame")
+            indicator.Size = UDim2.new(0, 3, 0, 14)
+            indicator.Position = UDim2.new(0, 4, 0.5, -7)
+            indicator.BackgroundColor3 = methodColors[entry.method] or T.TextPrimary
+            indicator.BorderSizePixel = 0
+            indicator.ZIndex = 14
+            indicator.Parent = btn
+            corner(indicator, 2)
+
+            local lbl = Instance.new("TextLabel")
+            lbl.Size = UDim2.new(1, -16, 1, 0)
+            lbl.Position = UDim2.new(0, 12, 0, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = string.format("[%d] %s", entry.id, entry.name)
+            lbl.TextColor3 = T.TextPrimary
+            lbl.TextSize = 9
+            lbl.Font = Enum.Font.Gotham
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.ZIndex = 14
+            lbl.Parent = btn
+
+            btn.MouseButton1Click:Connect(function()
+                showDetail(entry)
+                rebuildList()
             end)
         end
     end
 end
 
--- copy full script
-CopyScriptBtn.MouseButton1Click:Connect(function()
-    if not selectedEntry then return end
-    local rawArgs = {}
-    for _,a in ipairs(selectedEntry.args) do table.insert(rawArgs, a.raw) end
-    local script = buildScript(selectedEntry.fullPath, selectedEntry.method, rawArgs)
-    pcall(setclipboard, script)
-    CopyScriptBtn.Text = "✓ Copied!"
-    task.delay(1.5, function() CopyScriptBtn.Text = "📋 Copy Script" end)
-end)
-
--- =====================================================================
--- ADD ENTRY — buat row di list kiri
--- =====================================================================
-local function addEntry(method, remote, args)
-    entryCount += 1
-    CountTxt.Text = entryCount.." remotes"
-
-    -- cap: hapus entry terlama
-    if #entries >= MAX_ENTRIES then
-        local old = table.remove(entries,1)
-        if old.row then old.row:Destroy() end
-    end
-
-    local serializedArgs = {}
-    for _,v in ipairs(args) do
-        table.insert(serializedArgs, {raw=v, serialized=serializeArg(v)})
-    end
-
-    local fullPath  = remote:GetFullName()
-    local shortName = remote.Name
-    local col       = methodColors[method] or T.TextPrimary
-
-    local entry = {
-        id         = entryCount,
-        method     = method,
-        name       = shortName,
-        fullPath   = fullPath,
-        args       = serializedArgs,
-        time       = os.date("%H:%M:%S"),
-        row        = nil,
-    }
-
-    -- ROW di list kiri
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(1,0,0,48); row.BackgroundColor3 = T.Card
-    row.BorderSizePixel = 0; row.ZIndex = 12; row.LayoutOrder = entryCount; row.Parent = ListScroll
-    corner(row,6)
-
-    -- strip warna method
-    local strip = Instance.new("Frame")
-    strip.Size = UDim2.new(0,3,0.7,0); strip.Position = UDim2.new(0,0,0.15,0)
-    strip.BackgroundColor3 = col; strip.BorderSizePixel = 0; strip.ZIndex = 13; strip.Parent = row; corner(strip,2)
-
-    -- method badge mini
-    local mb = Instance.new("Frame")
-    mb.Size = UDim2.new(0,70,0,14); mb.Position = UDim2.new(0,8,0,6)
-    mb.BackgroundColor3 = col; mb.BackgroundTransparency = 0.7; mb.BorderSizePixel = 0; mb.ZIndex = 13; mb.Parent = row; corner(mb,4)
-    local mbl = Instance.new("TextLabel")
-    mbl.Size = UDim2.new(1,0,1,0); mbl.BackgroundTransparency = 1; mbl.Text = method
-    mbl.TextColor3 = col; mbl.TextSize = 7; mbl.Font = Enum.Font.GothamBold
-    mbl.TextXAlignment = Enum.TextXAlignment.Center; mbl.ZIndex = 14; mbl.Parent = mb
-
-    -- remote name
-    local nl = Instance.new("TextLabel")
-    nl.Size = UDim2.new(1,-10,0,16); nl.Position = UDim2.new(0,8,0,22)
-    nl.BackgroundTransparency = 1; nl.Text = shortName
-    nl.TextColor3 = T.TextPrimary; nl.TextSize = 11; nl.Font = Enum.Font.GothamBold
-    nl.TextXAlignment = Enum.TextXAlignment.Left; nl.TextTruncate = Enum.TextTruncate.AtEnd
-    nl.ZIndex = 13; nl.Parent = row
-
-    -- arg count badge
-    local ac = Instance.new("TextLabel")
-    ac.Size = UDim2.new(0,30,0,14); ac.Position = UDim2.new(1,-34,0,6)
-    ac.BackgroundTransparency = 1
-    ac.Text = #args.." arg"..(#args~=1 and "s" or "")
-    ac.TextColor3 = T.TextMuted; ac.TextSize = 8; ac.Font = Enum.Font.Gotham
-    ac.TextXAlignment = Enum.TextXAlignment.Right; ac.ZIndex = 13; ac.Parent = row
-
-    -- time
-    local tl = Instance.new("TextLabel")
-    tl.Size = UDim2.new(0,55,0,14); tl.Position = UDim2.new(1,-60,1,-18)
-    tl.BackgroundTransparency = 1; tl.Text = entry.time
-    tl.TextColor3 = T.TextMuted; tl.TextSize = 8; tl.Font = Enum.Font.Gotham
-    tl.TextXAlignment = Enum.TextXAlignment.Right; tl.ZIndex = 13; tl.Parent = row
-
-    -- click to detail
-    local clickBtn = Instance.new("TextButton")
-    clickBtn.Size = UDim2.new(1,0,1,0); clickBtn.BackgroundTransparency = 1; clickBtn.Text = ""
-    clickBtn.ZIndex = 14; clickBtn.Parent = row
-    clickBtn.MouseButton1Click:Connect(function() showDetail(entry) end)
-    row.MouseEnter:Connect(function() tw(row,{BackgroundColor3=T.CardHover}) end)
-    row.MouseLeave:Connect(function() tw(row,{BackgroundColor3=T.Card}) end)
-
-    -- apply filter visibility
-    local q = filterQuery:lower()
-    row.Visible = (q=="" or shortName:lower():find(q,1,true) or fullPath:lower():find(q,1,true) or method:lower():find(q,1,true))
-
-    entry.row = row
-    table.insert(entries, entry)
-
-    -- auto scroll list
-    task.defer(function()
-        ListScroll.CanvasPosition = Vector2.new(0, ListScroll.AbsoluteCanvasSize.Y)
-    end)
-end
-
--- filter
 FilterBox:GetPropertyChangedSignal("Text"):Connect(function()
     filterQuery = FilterBox.Text
-    local q = filterQuery:lower()
-    for _,entry in ipairs(entries) do
-        if entry.row then
-            entry.row.Visible = (q=="" or entry.name:lower():find(q,1,true) or entry.fullPath:lower():find(q,1,true) or entry.method:lower():find(q,1,true))
-        end
-    end
+    rebuildList()
 end)
 
--- clear
 ClearBtn.MouseButton1Click:Connect(function()
-    for _,entry in ipairs(entries) do if entry.row then entry.row:Destroy() end end
-    table.clear(entries); entryCount=0; CountTxt.Text="0 remotes"
+    entries = {}
+    entryCount = 0
+    selectedEntry = nil
     clearDetail()
+    rebuildList()
+    CountTxt.Text = "0 remotes"
 end)
 
--- save
 SaveBtn.MouseButton1Click:Connect(function()
-    local lines={}
-    for _,entry in ipairs(entries) do
-        table.insert(lines,"["..entry.time.."] "..entry.method.." → "..entry.fullPath)
-        for i,arg in ipairs(entry.args) do
-            table.insert(lines,"  ["..i.."] "..arg.serialized)
+    if writefile then
+        local dumpData = {}
+        for _, entry in ipairs(entries) do
+            table.insert(dumpData, string.format("[%s] %s -> %s\nArgs: %s\n", entry.time, entry.method, entry.fullPath, buildScript(entry.fullPath, entry.method, entry.rawArgs)))
         end
-        table.insert(lines,"")
+        local fileName = "ZarVerseSpy_Dump_" .. os.time() .. ".txt"
+        writefile(fileName, table.concat(dumpData, "\n---\n"))
+        SaveBtn.Text = "Saved!"
+        task.delay(1, function() SaveBtn.Text = "💾 Save" end)
     end
-    local fname="ZarVerseSpy_"..os.time()..".txt"
-    pcall(writefile,fname,table.concat(lines,"\n"))
-    SaveBtn.Text="✓ Saved!"
-    task.delay(1.5,function() SaveBtn.Text="💾 Save" end)
 end)
 
--- =====================================================================
--- HOOK — intercept semua method
--- =====================================================================
-local hookMethods = {
-    "FireServer", "InvokeServer",
-    "FireClient", "FireAllClients", "InvokeClient"
-}
+local function logRemote(method, selfObj, args)
+    if isPaused then return end
+    if not selfObj then return end
 
-local hookOk = pcall(function()
+    local fullName = ""
+    pcall(function() fullName = selfObj:GetFullName() end)
+    if fullName == "" then fullName = tostring(selfObj) end
+
+    entryCount += 1
+    local serializedArgs = {}
+    for _, arg in ipairs(args) do
+        table.insert(serializedArgs, {
+            raw = arg,
+            serialized = serializeArg(arg)
+        })
+    end
+
+    local entry = {
+        id = entryCount,
+        method = method,
+        name = selfObj.Name or "Unknown",
+        fullPath = fullName,
+        time = os.date("%H:%M:%S"),
+        args = serializedArgs,
+        rawArgs = args
+    }
+
+    table.insert(entries, 1, entry)
+    if #entries > MAX_ENTRIES then
+        table.remove(entries)
+    end
+
+    CountTxt.Text = entryCount .. " remotes"
+    rebuildList()
+end
+
+-- Hooking Metamethod untuk Intercept FireServer / InvokeServer / FireClient dll
+pcall(function()
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
         local method = getnamecallmethod()
-
-        -- cek apakah method yang mau di-spy
-        local shouldSpy = false
-        for _,m in ipairs(hookMethods) do
-            if method == m then shouldSpy = true; break end
+        local args = {...}
+        if method == "FireServer" or method == "InvokeServer" or method == "FireClient" or method == "FireAllClients" or method == "InvokeClient" then
+             pcall(function()
+                 logRemote(method, self, args)
+             end)
         end
-
-        if shouldSpy and not isPaused then
-            pcall(function()
-                local args = {...}
-                -- filter: kalau self adalah RemoteEvent atau RemoteFunction
-                if self:IsA("RemoteEvent") or self:IsA("RemoteFunction")
-                or self:IsA("BindableEvent") or self:IsA("BindableFunction") then
-                    addEntry(method, self, args)
-                end
-            end)
-        end
-
         return oldNamecall(self, ...)
     end)
 end)
 
--- =====================================================================
--- STATUS
--- =====================================================================
-if not hookOk then
-    -- tampilkan error di detail panel
-    clearDetail()
-    local errL = Instance.new("TextLabel")
-    errL.Size = UDim2.new(1,0,0,60); errL.BackgroundTransparency = 1
-    errL.Text = "✕ hookmetamethod tidak tersedia.\n\nGunakan executor yang support:\nSynapse X, Delta, Arceus X, Fluxus"
-    errL.TextColor3 = T.Red; errL.TextSize = 11; errL.Font = Enum.Font.GothamMedium
-    errL.TextXAlignment = Enum.TextXAlignment.Center; errL.TextWrapped = true
-    errL.ZIndex = 13; errL.LayoutOrder = 0; errL.Parent = DetailScroll
-    DetailTitle.Text = "Error — Executor tidak support"
-end
-
--- =====================================================================
--- OPENING ANIMATION
--- =====================================================================
-Win.BackgroundTransparency = 1
-Win.Position = UDim2.new(0.5,-290,0.5,-260)
-tw(Win,{BackgroundTransparency=0,Position=UDim2.new(0.5,-290,0.5,-240)},0.25,Enum.EasingStyle.Back)
-
-print("[ZarVerse Spy] v1.0 loaded. Hook: "..(hookOk and "✓ Active" or "✕ Failed"))
+print("ZarVerse Spy v1.0 berhasil dimuat dan aktif!")
